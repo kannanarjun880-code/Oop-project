@@ -119,3 +119,85 @@ public class StudentDashboard extends JFrame {
         loadSubjects();
         loadQuizzes();
         loadResults();
+    }
+    
+    private void loadSubjects() {
+        cmbSubjects.removeAllItems();
+        cmbSubjects.addItem("All Subjects");
+        
+        List<Subject> subjects = subjectDAO.getAllSubjects();
+        for (Subject subject : subjects) {
+            cmbSubjects.addItem(subject.getName());
+        }
+    }
+    
+    private void loadQuizzes() {
+        quizzesTableModel.setRowCount(0);
+        List<Quiz> quizzes = quizDAO.getAllQuizzes();
+        for (Quiz quiz : quizzes) {
+            if (quiz.isActive()) {
+                quizzesTableModel.addRow(new Object[]{
+                    quiz.getId(),
+                    quiz.getTitle(),
+                    "Subject ID: " + quiz.getSubjectId(),
+                    quiz.getDescription(),
+                    quiz.getTimeLimit() + " min",
+                    quiz.getTotalQuestions()
+                });
+            }
+        }
+    }
+    
+    private void loadQuizzesBySubject() {
+        String selectedSubject = (String) cmbSubjects.getSelectedItem();
+        if ("All Subjects".equals(selectedSubject)) {
+            loadQuizzes();
+            return;
+        }
+        
+        quizzesTableModel.setRowCount(0);
+        loadQuizzes();
+    }
+    
+    private void loadResults() {
+        resultsTableModel.setRowCount(0);
+        List<Result> results = resultDAO.getResultsByStudent(student.getId());
+        for (Result result : results) {
+            resultsTableModel.addRow(new Object[]{
+                result.getId(),
+                "Quiz ID: " + result.getQuizId(),
+                "Subject ID",
+                result.getScore(),
+                result.getTotalQuestions(),
+                String.format("%.2f%%", result.getPercentage()),
+                result.getTimeTaken() + " sec",
+                result.getSubmittedAt()
+            });
+        }
+    }
+    
+    private void takeQuiz() {
+        int selectedRow = tblQuizzes.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a quiz to take");
+            return;
+        }
+        
+        int quizId = (int) quizzesTableModel.getValueAt(selectedRow, 0);
+        String quizTitle = (String) quizzesTableModel.getValueAt(selectedRow, 1);
+        
+        int confirm = JOptionPane.showConfirmDialog(this, 
+            "Start quiz: " + quizTitle + "?",
+            "Confirm Quiz", JOptionPane.YES_NO_OPTION);
+            
+        if (confirm == JOptionPane.YES_OPTION) {
+            JOptionPane.showMessageDialog(this, 
+                "Quiz interface would open here for quiz ID: " + quizId);
+        }
+    }
+    
+    private void logout() {
+        dispose();
+        new LoginForm().setVisible(true);
+    }
+}
